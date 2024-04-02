@@ -1,5 +1,6 @@
 # import mysql.connector
 from dotenv import load_dotenv
+import streamlit as st
 import os
 
 load_dotenv()
@@ -16,5 +17,6 @@ load_dotenv()
 #             print("Connected to MySQL database")
 #     except mysql.connector.Error as e:
 #         print(f"Error connecting to MySQL database: {e}")
+print(st.secrets['host'])
 print(os.environ.get('host'))
 # print_database()
