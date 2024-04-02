@@ -1,15 +1,16 @@
 import mysql.connector
-from dotenv import dotenv_values
+from dotenv import load_dotenv
+import os
 
-creds = dotenv_values(".env")
+load_dotenv()
 
 def print_database():
     try:
         db = mysql.connector.connect(
-            host=creds['host'],
-            user=creds['user'],
-            password=creds['password'],
-            database=creds['database']
+            host=os.environ.get('host'),
+            user=os.environ.get('user'),
+            password=os.environ.get('password'),
+            database=os.environ.get('database')
         )
         if db.is_connected():
             print("Connected to MySQL database")
