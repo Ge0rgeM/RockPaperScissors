@@ -164,14 +164,14 @@ class MyMainWindow(QMainWindow):
                 image = rd.choice(self.images)
 
 
-if __name__ == "__main__":
-    # Create the application instance
-    app = QApplication(sys.argv)
+# if __name__ == "__main__":
+#     # Create the application instance
+#     app = QApplication(sys.argv)
 
-    # Create and show the main window
-    window = MyLoginWindow()
-    window.show()
+#     # Create and show the main window
+#     window = MyLoginWindow()
+#     window.show()
 
-    # Run the application event loop
-    app.exec_()
+#     # Run the application event loop
+#     app.exec_()
     
