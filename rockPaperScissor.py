@@ -39,13 +39,24 @@ class MyMainWindow(QMainWindow):
         
         loadUi("Resources/RockPaperScissorGUI_finished.ui", self)
 
+        # TO DO connection to database and searching for user + saving it's stats.
         self.user_firstname = firstname
         self.user_lastname = lastname
-        self.images = ["Resources/scissors.png", "Resources/paper.png", "Resources/rock.png"]
+        # TO DO 
+        self.resources = {
+            'images': {
+                'scissors': "Resources/scissors.png",
+                'paper': "Resources/paper.png",
+                'rock': "Resources/rock.png"
+            },
+            'finishing_texts': {
+                'user_win_texts': ["Ha Ha You WON... !"],
+                'pc_win_texts': ["Sorry But NO LUCK..."],
+                'draw_texts': ["Nice Try But It's a draw !"]
+            }
+        }
+        # self.images = ["Resources/scissors.png", "Resources/paper.png", "Resources/rock.png"]
         self.all_options = [self.rock, self.paper, self.scissors, self.reset]
-        self.user_win_texts = ["Ha Ha You WON... !"]
-        self.pc_win_texts = ["Sorry But NO LUCK..."]
-        self.draw_texts = ["Nice Try But It's a draw !"]
         
         self.total_animation_cycles = 10
         self.animation_speed = 150
@@ -73,7 +84,7 @@ class MyMainWindow(QMainWindow):
     def user_option_choose(self, option):
         self.userImg.setScaledContents(True)
         self.userImg.setPixmap(QPixmap(f"Resources/{option.text()}.png").scaled(740, 1002))
-        self.current_user_image = f"Resources/{option.text()}.png".lower()
+        self.current_user_image = f"Resources/{option.text().lower()}.png"
 
         self.cycle_count = 0
 
@@ -108,28 +119,28 @@ class MyMainWindow(QMainWindow):
 
     def animation_end_results(self):
         if self.current_pc_image == self.current_user_image:
-            self.resultText.setText(rd.choice(self.draw_texts))
-        elif self.current_user_image == "rock.png":
-            if self.current_pc_image == "paper.png":
+            self.resultText.setText(rd.choice(self.resources['finishing_texts']['draw_texts']))
+        elif self.current_user_image == "Resources/rock.png":
+            if self.current_pc_image == "Resources/paper.png":
                 self.PC_Score.setText(str(int(self.PC_Score.text())+1))
-                self.resultText.setText(rd.choice(self.pc_win_texts))
-            elif self.current_pc_image == "scissors.png":
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['pc_win_texts']))
+            elif self.current_pc_image == "Resources/scissors.png":
                 self.userScore.setText(str(int(self.userScore.text())+1))
-                self.resultText.setText(rd.choice(self.user_win_texts))
-        elif self.current_user_image == "paper.png":
-            if self.current_pc_image == "rock.png":
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['user_win_texts']))
+        elif self.current_user_image == "Resources/paper.png":
+            if self.current_pc_image == "Resources/rock.png":
                 self.userScore.setText(str(int(self.userScore.text())+1))
-                self.resultText.setText(rd.choice(self.user_win_texts))
-            elif self.current_pc_image == "scissors.png":
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['user_win_texts']))
+            elif self.current_pc_image == "Resources/scissors.png":
                 self.PC_Score.setText(str(int(self.PC_Score.text())+1))
-                self.resultText.setText(rd.choice(self.pc_win_texts))
-        elif self.current_user_image == "scissors.png":
-            if self.current_pc_image == "rock.png":
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['pc_win_texts']))
+        elif self.current_user_image == "Resources/scissors.png":
+            if self.current_pc_image == "Resources/rock.png":
                 self.PC_Score.setText(str(int(self.PC_Score.text())+1))
-                self.resultText.setText(rd.choice(self.pc_win_texts))
-            elif self.current_pc_image == "paper.png":
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['pc_win_texts']))
+            elif self.current_pc_image == "Resources/paper.png":
                 self.userScore.setText(str(int(self.userScore.text())+1))
-                self.resultText.setText(rd.choice(self.user_win_texts))
+                self.resultText.setText(rd.choice(self.resources['finishing_texts']['user_win_texts']))
 
     def animation_end_check(self):
         if self.cycle_count == self.total_animation_cycles+1:
@@ -153,7 +164,7 @@ class MyMainWindow(QMainWindow):
         self.animation_end_check()
 
     def set_image(self):
-        image = rd.choice(self.images)
+        image = rd.choice(list(self.resources['images'].values()))
         while True:
             if self.current_pc_image != image:
                 pixmap = QPixmap(image)
@@ -161,17 +172,17 @@ class MyMainWindow(QMainWindow):
                 self.current_pc_image = image;
                 break
             else:
-                image = rd.choice(self.images)
+                image = rd.choice(list(self.resources['images'].values()))
 
 
-# if __name__ == "__main__":
-#     # Create the application instance
-#     app = QApplication(sys.argv)
+if __name__ == "__main__":
+    # Create the application instance
+    app = QApplication(sys.argv)
 
-#     # Create and show the main window
-#     window = MyLoginWindow()
-#     window.show()
+    # Create and show the main window
+    window = MyLoginWindow()
+    window.show()
 
-#     # Run the application event loop
-#     app.exec_()
+    # Run the application event loop
+    app.exec_()
     
