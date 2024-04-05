@@ -5,44 +5,125 @@ from PyQt5.QtGui import QPixmap, QIcon, QRegExpValidator
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 import random as rd
+from DatabaseFunctions import test_database_connection, table_exists, add_single_query, username_availability
 
 
 class MyLoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # loadUi("Resources/UserLoginGUI.ui", self)
         loadUi("Resources/UserLoginGUI.ui", self)
 
-        restriction_for_only_letters = QRegExp("[a-zA-Z\u10D0-\u10FA]+")
-        validator = QRegExpValidator(restriction_for_only_letters)
-        self.user_firstname.setValidator(validator)
-        self.user_lastname.setValidator(validator)
+        self.table_name = 'RockPaperScissorsUsers'
+        table_exists(self.table_name)
+        self.curr_state = ''
+        self.change_login_state()
+
+        # restriction_for_only_letters = QRegExp("[a-zA-Z\u10D0-\u10FA]+")
+        # validator = QRegExpValidator(restriction_for_only_letters)
+        # self.user_firstname.setValidator(validator)
+        # self.user_lastname.setValidator(validator)
+
+        #Adding method to start app by 'Enter' button.
+        self.register_button.clicked.connect(self.change_login_state)
 
         self.submit.setShortcut("Return")
         self.submit.clicked.connect(self.start_app)
+        
+    
+    def change_login_state(self):
+        if self.curr_state == 'login':
+            self.curr_state = 'register'
+            #Reset If something was written
+            self.user_firstname.setText('')
+            self.user_lastname.setText('')
+            self.user_password.setText('')
+            self.user_username.setText('')
+
+            self.user_firstname_frame.setHidden(False)
+            self.user_lastname_frame.setHidden(False)
+            self.user_password.setPlaceholderText('Create Password')
+            self.register_question.setText('Have an account?')
+            self.register_question.setFixedWidth(250)
+            self.register_button.setText('Login')
+
+        else: #initial state
+            self.curr_state = 'login'
+            #Reset If something was written
+            self.user_firstname.setText('')
+            self.user_lastname.setText('')
+            self.user_password.setText('')
+            self.user_username.setText('')
+
+            self.register_question.setText('Do not have an account? ')
+            self.register_question.setFixedWidth(265)
+            self.register_button.setText('Register')
+            self.user_password.setPlaceholderText('Password')
+            self.user_firstname_frame.setHidden(True)
+            self.user_lastname_frame.setHidden(True)
+            
 
     def start_app(self):
-        user_firstname = self.user_firstname.text()
-        user_lastname = self.user_lastname.text()
+        # TO DO connection to database and searching for user + saving it's stats.
+        # TO DO Connection is Done !
+        if self.curr_state == 'login':
+            user_username = self.user_username.text()
+            user_password = self.user_password.text()
 
-        if user_firstname != '' and user_lastname != '':
-            self.close()
-            MyMainWindow(user_firstname, user_lastname).show()
+        elif self.curr_state == 'register':
+            user_firstname = self.user_firstname.text()
+            user_lastname = self.user_lastname.text()
+            user_username = self.user_username.text()
+            user_password = self.user_password.text()
+            
+            if username_availability(self.table_name, user_username) == True:
+                self.add_user_to_database()
+                pass
+            else:
+                #popup for not available username
+                print('error')
+                
+            # self.close()
+            # MyMainWindow(user_firstname, user_lastname, True, self.table_name).show()
+            # if user_firstname != '' and user_lastname != '':
+            #     if test_database_connection() == False:
+            #         #TO DO add Guest Mode Without Database
+            #         print('Error')
+            #         MyMainWindow(user_firstname, user_lastname, False).show()
+            #     else:
+            #         self.close()
+            #         MyMainWindow(user_firstname, user_lastname, True).show()
+
+    def add_user_to_database(self):
+        add_single_query(self.table_name, (self.user_firstname.text(),
+                                            self.user_lastname.text(),
+                                            self.user_username.text(),
+                                            self.user_password.text(),
+                                            0,
+                                            0))
+        print(f'Table: {self.table_name}')
 
 
 class MyMainWindow(QMainWindow):
-    def __init__(self, firstname, lastname):
+    def __init__(self, firstname, lastname, database_connected, table_name):
         super().__init__()
         # Set up the UI
         # self.ui = Ui_MainWindow()
-        # self.ui.setupUi(self)
-        
+        # self.ui.setupUi(self)    
         loadUi("Resources/RockPaperScissorGUI_finished.ui", self)
+        self.database_connected = database_connected
 
-        # TO DO connection to database and searching for user + saving it's stats.
         self.user_firstname = firstname
         self.user_lastname = lastname
-        # TO DO 
+        
+        self.user_password = 'None' #Temporary
+        self.username = 'None' #Temporary
+
+        self.table_name = table_name
+        if self.database_connected:
+            table_exists(self.table_name) #Ensures that table exists. (If not creates)
+        
         self.resources = {
             'images': {
                 'scissors': "Resources/scissors.png",
@@ -173,7 +254,6 @@ class MyMainWindow(QMainWindow):
                 break
             else:
                 image = rd.choice(list(self.resources['images'].values()))
-
 
 if __name__ == "__main__":
     # Create the application instance
