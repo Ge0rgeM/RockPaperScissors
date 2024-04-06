@@ -1,15 +1,21 @@
 import mysql.connector
+from UserClass import User
+
+
+def connect_database():
+    connection = mysql.connector.connect(
+        host='sql11.freesqldatabase.com',
+        user='sql11695288',
+        password='Q2xne5YcPF',
+        database='sql11695288'
+    )
+    return connection
 
 def test_database_connection():
     #backup option in case something happens to database and it can not be connected.
     try:
             #This is just free sample online database so do not even bother messing around :)) 
-            db = mysql.connector.connect(
-                host='sql11.freesqldatabase.com',
-                user='sql11695288',
-                password='Q2xne5YcPF',
-                database='sql11695288'
-            )
+            db = connect_database()
             if db.is_connected():
                 print("Connected to MySQL database")
                 return True
@@ -20,6 +26,7 @@ def test_database_connection():
     
 def create_table(table_name, cursor):
     table = f"""CREATE TABLE IF NOT EXISTS {table_name} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
         Firstname VARCHAR(255),
         Lastname VARCHAR(255),
         Username VARCHAR(255),
@@ -28,17 +35,13 @@ def create_table(table_name, cursor):
         User_Score INT
     )"""
     cursor.execute(table)
-    print(f"{table_name}Table Created")
+    print(f"{table_name} Table Created")
 
 def table_exists(table_name):
     #Ensures that table exists
-    db = mysql.connector.connect(
-        #Since we passed test connection then it is possible to connect. So no need for more testing.
-        host='sql11.freesqldatabase.com',
-        user='sql11695288',
-        password='Q2xne5YcPF',
-        database='sql11695288'
-    )
+    #Since we passed test connection then it is possible to connect. So no need for more testing.
+    db = connect_database()
+
     c = db.cursor()
     c.execute('SHOW TABLES LIKE %s', (table_name,))
     
@@ -48,12 +51,8 @@ def table_exists(table_name):
         print(f"Table {table_name} Exists")
 
 def add_single_query(table_name, details):
-    db = mysql.connector.connect(
-        host='sql11.freesqldatabase.com',
-        user='sql11695288',
-        password='Q2xne5YcPF',
-        database='sql11695288'
-    )
+    db = connect_database()
+
     c = db.cursor()
     sql = f"INSERT INTO {table_name} (Firstname, Lastname, Username, Password, PC_Score, User_Score) VALUES (%s, %s, %s, %s, %s, %s)"
     c.execute(sql, details)
@@ -64,14 +63,34 @@ def add_single_query(table_name, details):
     c.close()
     db.close()
 
+def search_user(table_name, creds):
+    db = connect_database()
+
+    cursor = db.cursor()
+
+    sql = f"SELECT * FROM {table_name} WHERE Username = %s AND Password = %s"
+    cursor.execute(sql, creds)
+    
+    row = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if row:
+        return User(id=row[0],
+                    firstname=row[1],
+                    lastname=row[2],
+                    username=row[3],
+                    password=row[4],
+                    user_score=row[5],
+                    PC_score=row[6])
+    else:
+        return None
+    
+
 def username_availability(table_name, username):
     try:
-        db = mysql.connector.connect(
-            host='sql11.freesqldatabase.com',
-            user='sql11695288',
-            password='Q2xne5YcPF',
-            database='sql11695288'
-        )
+        db = connect_database()
         cursor = db.cursor()
 
         sql = f"SELECT * FROM {table_name} WHERE Username = %s"
@@ -81,8 +100,6 @@ def username_availability(table_name, username):
         
         cursor.close()
         db.close()
-        
-        print(row)
 
         if row:
             return False
@@ -95,12 +112,7 @@ def username_availability(table_name, username):
     
 
 def print_database(): #Mostly For Debugging.
-    db = mysql.connector.connect(
-        host='sql11.freesqldatabase.com',
-        user='sql11695288',
-        password='Q2xne5YcPF',
-        database='sql11695288'
-    )
+    db = connect_database()
     cursor = db.cursor()
     cursor.execute("SHOW TABLES;")
     tables = cursor.fetchall()
@@ -117,4 +129,4 @@ def print_database(): #Mostly For Debugging.
     cursor.close()
     db.close()
 
-# print_database()
+print_database()

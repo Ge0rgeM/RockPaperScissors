@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap, QIcon, QRegExpValidator
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 import random as rd
-from DatabaseFunctions import test_database_connection, table_exists, add_single_query, username_availability
+from DatabaseFunctions import test_database_connection, table_exists, add_single_query, username_availability, search_user
 
 
 class MyLoginWindow(QMainWindow):
@@ -15,10 +15,18 @@ class MyLoginWindow(QMainWindow):
         # loadUi("Resources/UserLoginGUI.ui", self)
         loadUi("Resources/UserLoginGUI.ui", self)
 
+        self.database_connection = test_database_connection()
+        if self.database_connection == True:
+            pass
+        else:
+            pass
+
         self.table_name = 'RockPaperScissorsUsers'
         table_exists(self.table_name)
-        self.curr_state = ''
+
+        self.curr_state = '' #Login.Register
         self.change_login_state()
+
 
         # restriction_for_only_letters = QRegExp("[a-zA-Z\u10D0-\u10FA]+")
         # validator = QRegExpValidator(restriction_for_only_letters)
@@ -67,33 +75,37 @@ class MyLoginWindow(QMainWindow):
     def start_app(self):
         # TO DO connection to database and searching for user + saving it's stats.
         # TO DO Connection is Done !
+        # TO DO Login is Done !
+        # TO DO Register need to be Done ! (Usernmae availability check + GUI s)
+
         if self.curr_state == 'login':
             user_username = self.user_username.text()
             user_password = self.user_password.text()
+            user = search_user(self.table_name, (user_username, user_password))
+            
+            if user != None: #Means that user exists
+                self.close()
+                MyMainWindow(user_obj=user,
+                             database_connected=self.database_connection,
+                             table_name=self.table_name).show()
 
         elif self.curr_state == 'register':
-            user_firstname = self.user_firstname.text()
-            user_lastname = self.user_lastname.text()
             user_username = self.user_username.text()
             user_password = self.user_password.text()
             
             if username_availability(self.table_name, user_username) == True:
                 self.add_user_to_database()
-                pass
             else:
                 #popup for not available username
                 print('error')
-                
-            # self.close()
-            # MyMainWindow(user_firstname, user_lastname, True, self.table_name).show()
-            # if user_firstname != '' and user_lastname != '':
-            #     if test_database_connection() == False:
-            #         #TO DO add Guest Mode Without Database
-            #         print('Error')
-            #         MyMainWindow(user_firstname, user_lastname, False).show()
-            #     else:
-            #         self.close()
-            #         MyMainWindow(user_firstname, user_lastname, True).show()
+                return 
+
+            user = search_user(self.table_name, (user_username, user_password))
+            if user != None: #Ensures that user added successfully
+                self.close()
+                MyMainWindow(user_obj=user,
+                            database_connected=self.database_connection,
+                            table_name=self.table_name).show()
 
     def add_user_to_database(self):
         add_single_query(self.table_name, (self.user_firstname.text(),
@@ -106,23 +118,18 @@ class MyLoginWindow(QMainWindow):
 
 
 class MyMainWindow(QMainWindow):
-    def __init__(self, firstname, lastname, database_connected, table_name):
+    def __init__(self, user_obj, database_connected, table_name):
         super().__init__()
+        self.user_obj = user_obj
+        self.database_connected = database_connected
+        self.table_name = table_name
+        
         # Set up the UI
         # self.ui = Ui_MainWindow()
         # self.ui.setupUi(self)    
         loadUi("Resources/RockPaperScissorGUI_finished.ui", self)
-        self.database_connected = database_connected
-
-        self.user_firstname = firstname
-        self.user_lastname = lastname
         
-        self.user_password = 'None' #Temporary
-        self.username = 'None' #Temporary
-
-        self.table_name = table_name
-        if self.database_connected:
-            table_exists(self.table_name) #Ensures that table exists. (If not creates)
+        self.import_user()
         
         self.resources = {
             'images': {
@@ -254,6 +261,17 @@ class MyMainWindow(QMainWindow):
                 break
             else:
                 image = rd.choice(list(self.resources['images'].values()))
+
+    def import_user(self):
+        self.user_firstname = self.user_obj.firstname
+        self.user_lastname = self.user_obj.lastname
+        self.username = self.user_obj.username
+        self.user_password = self.user_obj.password
+        self.userScore.setText(str(self.user_obj.user_score))
+        self.PC_Score.setText(str(self.user_obj.PC_score))
+
+        print(self.user_obj)
+
 
 if __name__ == "__main__":
     # Create the application instance
