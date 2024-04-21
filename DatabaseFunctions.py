@@ -1,8 +1,10 @@
 import mysql.connector
 from UserClass import User
 
+debuging_mode = False
 try:
     from ForDebugging import print_database
+    debuging_mode = True
 except:
     print('ForDebugging Module Not Found')
 
@@ -115,4 +117,5 @@ def username_availability(table_name, username):
         print("Error:", e)
         return True
 
-print_database()
+if debuging_mode:
+    print_database()
