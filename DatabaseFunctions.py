@@ -1,8 +1,14 @@
 import mysql.connector
 from UserClass import User
 
+try:
+    from ForDebugging import print_database
+except:
+    print('ForDebugging Module Not Found')
+
 
 def connect_database():
+    #This is just free sample online database so do not even bother messing around :)) 
     connection = mysql.connector.connect(
         host='sql11.freesqldatabase.com',
         user='sql11695288',
@@ -14,7 +20,6 @@ def connect_database():
 def test_database_connection():
     #backup option in case something happens to database and it can not be connected.
     try:
-            #This is just free sample online database so do not even bother messing around :)) 
             db = connect_database()
             if db.is_connected():
                 print("Connected to MySQL database")
@@ -33,7 +38,7 @@ def create_table(table_name, cursor):
         Password VARCHAR(255),
         PC_Score INT,
         User_Score INT
-    )"""
+    )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"""
     cursor.execute(table)
     print(f"{table_name} Table Created")
 
@@ -109,24 +114,5 @@ def username_availability(table_name, username):
     except mysql.connector.Error as e:
         print("Error:", e)
         return True
-    
-
-def print_database(): #Mostly For Debugging.
-    db = connect_database()
-    cursor = db.cursor()
-    cursor.execute("SHOW TABLES;")
-    tables = cursor.fetchall()
-
-    # Fetch all rows from each table
-    for table in tables:
-        table_name = table[0]
-        print(f"Table: {table_name}")
-        cursor.execute(f"SELECT * FROM {table_name};")
-        rows = cursor.fetchall()
-        for row in rows:
-            print(row)
-    
-    cursor.close()
-    db.close()
 
 print_database()
