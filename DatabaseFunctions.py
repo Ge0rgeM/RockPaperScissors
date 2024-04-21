@@ -3,7 +3,7 @@ from UserClass import User
 
 debuging_mode = False
 try:
-    from ForDebugging import print_database
+    from ForDebugging import print_database # type: ignore
     debuging_mode = True
 except:
     print('ForDebugging Module Not Found')
