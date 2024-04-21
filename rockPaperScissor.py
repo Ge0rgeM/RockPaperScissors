@@ -8,6 +8,7 @@ from Resources.IncorrectUserGUI import Ui_Dialog
 from Resources.RockPaperScissorGUI import Ui_RockPaperScissor
 from Resources.UserLoginGUI import Ui_UserLogin
 import random as rd
+from PasswordChecker import valid_new_user_password
 from DatabaseFunctions import test_database_connection, table_exists, add_single_query, username_availability, search_user
 
 class IncorrectUser(QDialog):
@@ -25,21 +26,24 @@ class MyLoginWindow(QMainWindow):
 
         self.database_connection = test_database_connection()
         if self.database_connection == True:
-            pass
+            pass    
         else:
             pass
 
         self.table_name = 'RockPaperScissorsUsers'
         table_exists(self.table_name)
 
-        self.curr_state = '' #Login.Register
-        self.change_login_state()
+        self.curr_state = 'register' #Login/Register
+        self.change_login_state() #To make Login Window By Default
 
 
         # restriction_for_only_letters = QRegExp("[a-zA-Z\u10D0-\u10FA]+")
-        # validator = QRegExpValidator(restriction_for_only_letters)
-        # self.ui.user_firstname.setValidator(validator)
-        # self.ui.user_lastname.setValidator(validator)
+        validator_for_text = QRegExpValidator(QRegExp("^[a-zA-Z0-9_ა-ჰ]+$"))
+        self.ui.user_firstname.setValidator(validator_for_text)
+        self.ui.user_lastname.setValidator(validator_for_text)
+        self.ui.user_password.setValidator(validator_for_text)
+        validator_for_password = QRegExpValidator(QRegExp("^[a-zA-Z0-9_]+$"))
+        self.ui.user_username.setValidator(validator_for_password)
 
         #Adding method to start app by 'Enter' button.
         self.ui.register_button.clicked.connect(self.change_login_state)
@@ -64,7 +68,7 @@ class MyLoginWindow(QMainWindow):
             self.ui.register_question.setFixedWidth(250)
             self.ui.register_button.setText('Login')
 
-        else: #initial state
+        elif self.curr_state == 'register': #initial state
             self.curr_state = 'login'
             #Reset If something was written
             self.ui.user_firstname.setText('')
@@ -98,7 +102,7 @@ class MyLoginWindow(QMainWindow):
                              database_connected=self.database_connection,
                              table_name=self.table_name).show()
             else:
-                #popup for not available username
+                #popup for not available profile
                 # self.close()
                 incorrect_user = IncorrectUser()
                 incorrect_user.exec_()
@@ -109,10 +113,18 @@ class MyLoginWindow(QMainWindow):
             user_password = self.ui.user_password.text()
             
             if username_availability(self.table_name, user_username) == True:
+                #To Do - Change this so we check username availability first but
+                #we add username after we check is password is valid.
                 self.add_user_to_database()
             else:
+                #popup for not available username
                 print('error')
                 return 
+            
+            if not valid_new_user_password(user_password):
+                #To Do - Pop up for not valid password.
+                print('Not valid password')
+                return
 
             user = search_user(self.table_name, (user_username, user_password))
             if user != None: #Ensures that user added successfully
