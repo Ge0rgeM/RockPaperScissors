@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox
 # from RockPaperScissorGUI_finished import Ui_MainWindow
 from PyQt5.QtGui import QPixmap, QIcon, QRegExpValidator
 from PyQt5.uic import loadUi
@@ -8,7 +8,7 @@ from Resources.IncorrectUserGUI import Ui_Dialog
 from Resources.RockPaperScissorGUI import Ui_RockPaperScissor
 from Resources.UserLoginGUI import Ui_UserLogin
 import random as rd
-from PasswordChecker import valid_new_user_password
+from PasswordChecker import valid_new_user_password, is_password_okay
 from DatabaseFunctions import test_database_connection, table_exists, add_single_query, username_availability, search_user
 
 class IncorrectUser(QDialog):
@@ -41,9 +41,9 @@ class MyLoginWindow(QMainWindow):
         validator_for_text = QRegExpValidator(QRegExp("^[a-zA-Z0-9_ა-ჰ]+$"))
         self.ui.user_firstname.setValidator(validator_for_text)
         self.ui.user_lastname.setValidator(validator_for_text)
-        self.ui.user_password.setValidator(validator_for_text)
+        self.ui.user_username.setValidator(validator_for_text)
         validator_for_password = QRegExpValidator(QRegExp("^[a-zA-Z0-9_]+$"))
-        self.ui.user_username.setValidator(validator_for_password)
+        self.ui.user_password.setValidator(validator_for_password)
 
         #Adding method to start app by 'Enter' button.
         self.ui.register_button.clicked.connect(self.change_login_state)
@@ -111,20 +111,21 @@ class MyLoginWindow(QMainWindow):
         elif self.curr_state == 'register':
             user_username = self.ui.user_username.text()
             user_password = self.ui.user_password.text()
-            
+            password_policy = valid_new_user_password(user_password)
+            password_validity = is_password_okay(password_policy)
+
             if username_availability(self.table_name, user_username) == True:
                 #To Do - Change this so we check username availability first but
-                #we add username after we check is password is valid.
-                self.add_user_to_database()
+                #we add username after we check password is valid.
+                if not password_validity:
+                    print('Not valid password')
+                    return
+                else: 
+                   self.add_user_to_database()
             else:
                 #popup for not available username
-                print('error')
+                print('username already in use ')
                 return 
-            
-            if not valid_new_user_password(user_password):
-                #To Do - Pop up for not valid password.
-                print('Not valid password')
-                return
 
             user = search_user(self.table_name, (user_username, user_password))
             if user != None: #Ensures that user added successfully
@@ -193,6 +194,27 @@ class MyMainWindow(QMainWindow):
         self.ui.scissors.clicked.connect(lambda: self.user_option_choose(self.ui.scissors))
         self.ui.reset.clicked.connect(self.reset_results)
 
+    def closeEvent(self, event):
+        #To Do - Make Custom Dialog Window - Import - Change To "Saving..."
+        reply = QMessageBox.question(
+            self,
+            'Message',
+            "Do you want to save your progress?",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+            QMessageBox.Cancel
+        )
+
+        if reply == QMessageBox.Yes:
+            self.save_progress()
+            event.accept()
+        elif reply == QMessageBox.No:
+            event.accept()
+        else:
+            event.ignore()
+
+    # def save_progress(self):
+    #     # Implement your save functionality here
+    #     print("Progress saved")
 
     def user_option_choose(self, option):
         self.ui.userImg.setScaledContents(True)
